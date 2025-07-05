@@ -1,11 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // This creates a static export of your app in the 'out' directory
   output: 'export',
-  // Optional: Disables image optimization, which is not needed for local Electron app
   images: {
     unoptimized: true,
   },
+  // Disable server-side features for static export
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

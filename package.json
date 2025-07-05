@@ -10,7 +10,41 @@
     "dev:electron-start": "wait-on tcp:3000 && wait-on electron/dist/main.js && electron .",
     "build": "npm run build:next && npm run build:electron",
     "build:next": "next build",
-    "build:electron": "tsc --project electron/tsconfig.json"
+    "build:electron": "tsc --project electron/tsconfig.json",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:all": "npm run build && electron-builder -mwl"
+  },
+  "build": {
+    "appId": "com.yourcompany.ai-screen-assistant",
+    "productName": "AI Screen Assistant",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/dist/**/*",
+      "out/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "shortcutName": "AI Screen Assistant"
+    }
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -33,21 +67,5 @@
     "ts-node": "^10.9.2",
     "typescript": "^5",
     "wait-on": "^8.0.3"
-  },
-  "build": {
-    "appId": "com.electron.gemini-vision",
-    "productName": "Gemini Vision",
-    "directories": {
-      "output": "dist",
-      "buildResources": "build"
-    },
-    "files": [
-      "electron/dist/**",
-      "out/**",
-      "package.json"
-    ],
-    "extraMetadata": {
-      "main": "electron/dist/main.js"
-    }
   }
 }
