@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import Settings from '../(components)/SettingsModal';
 
 const models = [
-  { id: 'gemini-1.5-flash-latest', name: 'Flash' },
-  { id: 'gemini-1.5-pro-latest', name: 'Pro' },
-  { id: 'gemini-2.0-flash-exp', name: 'Flash 2.0' },
+  { id: 'gemini-2.5-flash', name: 'Flash' },
+  { id: 'gemini-2.5-pro', name: 'Pro' },
+  { id: 'gemini-2.5-flash-lite-preview-06-17', name: 'Lite' },
 ];
 
 export default function InputPage() {
@@ -23,7 +23,7 @@ export default function InputPage() {
     if (window.api) {
       window.api.getApiKey().then((key) => {
         setHasApiKey(!!key);
-        // Auto-show settings if no API key
+        // Auto-show settings if no API key on first load
         if (!key) {
           setTimeout(() => setShowSettings(true), 500);
         }
@@ -36,6 +36,14 @@ export default function InputPage() {
         setShowSettings(false);
       });
 
+      // Listen for settings open from tray
+      const settingsUnsubscribe = window.api.on(
+        'open-settings-from-tray',
+        () => {
+          setShowSettings(true);
+        }
+      );
+
       // Listen for errors
       const errorUnsubscribe = window.api.on('error', (message: string) => {
         setError(message);
@@ -44,6 +52,7 @@ export default function InputPage() {
 
       return () => {
         unsubscribe?.();
+        settingsUnsubscribe?.();
         errorUnsubscribe?.();
       };
     }
@@ -52,6 +61,7 @@ export default function InputPage() {
   const handleSubmit = () => {
     if (!hasApiKey) {
       setShowSettings(true);
+      setError('Please set your API key first');
       return;
     }
 
@@ -71,10 +81,16 @@ export default function InputPage() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !showSettings) {
       e.preventDefault();
       handleSubmit();
     }
+  };
+
+  const toggleSettings = () => {
+    console.log('Toggle settings clicked, current state:', showSettings);
+    setShowSettings(!showSettings);
+    setError('');
   };
 
   return (
@@ -121,12 +137,12 @@ export default function InputPage() {
           </button>
 
           <button
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={toggleSettings}
             className={`p-1.5 rounded-md transition-all ${
               showSettings
                 ? 'text-white bg-white/20'
                 : 'text-gray-400 hover:text-white hover:bg-white/10'
-            }`}
+            } ${!hasApiKey ? 'animate-pulse text-orange-400' : ''}`}
             title="Settings"
           >
             <SettingsIcon size={18} />
@@ -134,12 +150,12 @@ export default function InputPage() {
 
           <button
             onClick={handleSubmit}
-            disabled={!hasApiKey && !showSettings}
+            disabled={!hasApiKey}
             className={`p-1.5 rounded-md transition-all ${
               query.trim() || includeImage
                 ? 'text-white bg-white/10 hover:bg-white/15'
                 : 'text-gray-400 hover:text-white hover:bg-white/10'
-            } disabled:opacity-50`}
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Send (Enter)"
           >
             <Send size={18} />
@@ -149,7 +165,7 @@ export default function InputPage() {
 
       {/* Error message */}
       {error && (
-        <div className="absolute -bottom-14 left-0 right-0 mx-auto w-fit bg-red-500/20 backdrop-blur-md text-red-400 text-sm px-4 py-2 rounded-lg border border-red-500/20">
+        <div className="absolute -bottom-14 left-0 right-0 mx-auto w-fit bg-red-500/20 backdrop-blur-md text-red-400 text-sm px-4 py-2 rounded-lg border border-red-500/20 animate-slideDown">
           {error}
         </div>
       )}
@@ -158,6 +174,7 @@ export default function InputPage() {
       {showSettings && (
         <Settings
           onClose={() => {
+            console.log('Settings closing');
             setShowSettings(false);
             // Recheck API key after settings close
             window.api?.getApiKey().then((key) => {
