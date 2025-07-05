@@ -2,23 +2,52 @@
   "name": "gg",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/dist/main.js",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "concurrently -k \"npm:dev:*\"",
+    "dev:next": "next dev",
+    "dev:electron-watch": "tsc --project electron/tsconfig.json --watch",
+    "dev:electron-start": "wait-on tcp:3000 && wait-on electron/dist/main.js && electron .",
+    "build": "npm run build:next && npm run build:electron",
+    "build:next": "next build",
+    "build:electron": "tsc --project electron/tsconfig.json"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "electron-store": "^10.1.0",
+    "lucide-react": "^0.525.0",
+    "next": "15.3.5",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.3.5"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4"
+    "concurrently": "^9.2.0",
+    "cross-env": "^7.0.3",
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12",
+    "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5",
+    "wait-on": "^8.0.3"
+  },
+  "build": {
+    "appId": "com.electron.gemini-vision",
+    "productName": "Gemini Vision",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/dist/**",
+      "out/**",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "electron/dist/main.js"
+    }
   }
 }
